@@ -1,0 +1,40 @@
+services:
+
+  ingestion:
+    build: ./ingestion-service
+    ports:
+      - "8000:8000"
+    environment:
+      - DETECTION_SERVICE_URL=http://detection:8001
+    volumes:
+      - ./uploaded_videos:/app/uploaded_videos
+    depends_on:
+      - detection
+
+  detection:
+    build: ./detection-service
+    ports:
+      - "8001:8001"
+    environment:
+      - ANALYTICS_SERVICE_URL=http://analytics:8002
+    volumes:
+      - ./uploaded_videos:/app/uploaded_videos
+      - ./output_videos:/app/output_videos
+
+  analytics:
+    build: ./analytics-service
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=postgresql://postgres.cdjkihwohxzogkuvtqag:Rudra%40220085@aws-1-ap-south-1.pooler.supabase.com:5432/postgres
+
+  dashboard:
+    build: ./dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      - INGESTION_SERVICE_URL=http://ingestion:8000
+      - ANALYTICS_SERVICE_URL=http://analytics:8002
+    depends_on:
+      - ingestion
+      - analytics
